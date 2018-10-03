@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="manifest" href="./manifest.json" />
+    <title></title>
+</head>
+
+<body>
+    サービスワーカーを試すページです!<br>
+    まだサービスワーカーは動いていません！<br/>
+    <input type="text" id="endpoint" /><br/>
+    <input type="text" id="auth" /><br/>
+    <input type="text" id="public-key" /><br/>
+    <p>
+        <input type="text" id="message" />
+        <button id="btn-send">送信</button>
+    </p>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+<script type="text/javascript">
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./serviceworker.js');
+
+        navigator.serviceWorker.ready
+            .then(function (registration) {
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true
+                });
+            })
+            .then(function (subscription) {
+                console.log('GCM EndPoint is:' + subscription.endpoint);
+                $("#endpoint").val(subscription.endpoint);
+                var auth = subscription.getKey('auth') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
+                    subscription.getKey('auth')))) : '';
+                console.log('User Auth is:' + auth);
+                $("#auth").val(auth);
+                var publicKey = subscription.getKey('p256dh') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
+                    subscription.getKey('p256dh')))) : '';
+                console.log('User PublicKey is:' + publicKey);
+                $("#public-key").val(publicKey);
+            })
+            .catch(function(e){
+                console.log(e);
+            });
+    }
+    else {
+        console.log('no service worker');
+    }
+
+    $(function(){
+        //curl --header "Authorization: key=(作成したプロジェクトのAPIキー)" --header Content-Type:"application/json" https://android.googleapis.com/gcm/send -d "{\"registration_ids\":[\"(エンドポイント文字列)\"]}"
+        $("#btn-send").click(function(){
+            $.ajax({
+                type: 'POST',
+                url: 'https://android.googleapis.com/gcm/send',
+                data: {
+                    registration_ids: [$("#endpoint").val()]
+                },
+                headers: {
+                    'Authorization': 'AIzaSyCes_xyR5WzhVlN0SUSaXojuIFkSb_TaSM',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(data, dataType) {
+                console.log(data);
+            })
+            .fail(function(XMLHttpRequest, textStatus, errorThrown){
+                console.log(errorThrown);
+            });
+        });
+    });
+</script>
+
+</html>
