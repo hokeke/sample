@@ -1,23 +1,25 @@
-self.addEventListener('fetch', function (event) {
-    event.respondWith(
-      new Response('サービスワーカーが動いています！')
+self.addEventListener('install', e => {
+    console.log('Service Worker oninstall: ', e);
+  });
+  
+  self.addEventListener('activate', e => {
+    console.log('Service Worker onactivate: ', e);
+  
+    e.waitUntil(self.clients.claim());
+  });
+  
+  self.addEventListener('fetch', e => {
+    console.log('Service Worker onfetch: ', e);
+  });
+  
+  self.addEventListener('push', e => {
+    console.log('Service Worker onpush: ', e);
+  
+    e.waitUntil(
+      self.registration.showNotification('Push Notification Title', {
+        body: 'message',
+        icon: 'http://placehold.it/192x192',
+        tag: 'push-notification-tag'
+      })
     );
-});
-
-self.addEventListener('push', function (event) {
-    console.log('Received a push message', event);
-    var title = "プッシュ通知です！";
-    var body = "プッシュ通知はこのようにして送られるのです";
-
-    event.waitUntil(
-        self.registration.showNotification(title, {
-            body: body,
-            icon: 'http://free-images.gatag.net/images/201108090000.jpg',
-            tag: 'push-notification-tag'
-        })
-    );
-});
-self.addEventListener('notificationclick', function (event) {
-    event.notification.close();
-    clients.openWindow("/");
-}, false);
+  });
