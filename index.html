@@ -9,18 +9,17 @@
 
 <body>
     サービスワーカーを試すページです!<br>
-    まだサービスワーカーは動いていません！<br/>
-    <input type="text" id="endpoint" /><br/>
-    <input type="text" id="auth" /><br/>
-    <input type="text" id="public-key" /><br/>
+    まだサービスワーカーは動いていません！<br />
+    <input type="text" id="endpoint" /><br />
+    <input type="text" id="auth" /><br />
+    <input type="text" id="public-key" /><br />
     <p>
         <input type="text" id="message" />
         <button id="btn-send">送信</button>
     </p>
 
 </body>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-    crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script type="text/javascript">
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./serviceworker.js');
@@ -44,34 +43,33 @@
                 console.log('User PublicKey is:' + publicKey);
                 $("#public-key").val(publicKey);
             })
-            .catch(function(e){
+            .catch(function (e) {
                 console.log(e);
             });
-    }
-    else {
+    } else {
         console.log('no service worker');
     }
 
-    $(function(){
+    $(function () {
         //curl --header "Authorization: key=(作成したプロジェクトのAPIキー)" --header Content-Type:"application/json" https://android.googleapis.com/gcm/send -d "{\"registration_ids\":[\"(エンドポイント文字列)\"]}"
-        $("#btn-send").click(function(){
+        $("#btn-send").click(function () {
             $.ajax({
-                type: 'POST',
-                url: 'https://android.googleapis.com/gcm/send',
-                data: {
-                    registration_ids: [$("#endpoint").val()]
-                },
-                headers: {
-                    'Authorization': 'AIzaSyCes_xyR5WzhVlN0SUSaXojuIFkSb_TaSM',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(function(data, dataType) {
-                console.log(data);
-            })
-            .fail(function(XMLHttpRequest, textStatus, errorThrown){
-                console.log(errorThrown);
-            });
+                    type: 'POST',
+                    url: 'https://android.googleapis.com/gcm/send',
+                    data: {
+                        registration_ids: [$("#endpoint").val()]
+                    },
+                    headers: {
+                        'Authorization': 'AIzaSyCes_xyR5WzhVlN0SUSaXojuIFkSb_TaSM',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(function (data, dataType) {
+                    console.log(data);
+                })
+                .fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                });
         });
     });
 </script>
