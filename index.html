@@ -53,14 +53,15 @@
     $(function () {
         //curl --header "Authorization: key=(作成したプロジェクトのAPIキー)" --header Content-Type:"application/json" https://android.googleapis.com/gcm/send -d "{\"registration_ids\":[\"(エンドポイント文字列)\"]}"
         $("#btn-send").click(function () {
+            //var registration_id = $("#endpoint").val().split('/').pop();
             $.ajax({
                     type: 'POST',
                     url: 'https://android.googleapis.com/gcm/send',
                     data: {
-                        registration_ids: [$("#endpoint").val()]
+                        'registration_ids': [$("#endpoint").val()]
                     },
                     headers: {
-                        'Authorization': 'AIzaSyCes_xyR5WzhVlN0SUSaXojuIFkSb_TaSM',
+                        'Authorization': 'key=AIzaSyCes_xyR5WzhVlN0SUSaXojuIFkSb_TaSM',
                         'Content-Type': 'application/json'
                     }
                 })
