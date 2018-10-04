@@ -38,6 +38,11 @@ self.addEventListener('fetch', e => {
 
 messaging.setBackgroundMessageHandler(function (e) {
   console.log("onMessage", e);
+  registration.showNotification(e.data.title, {
+    body: e.data.body,
+    icon: e.data.icon,
+    click_action: e.data.click_action
+  });
 });
 
 console.log("finish serviceworker");

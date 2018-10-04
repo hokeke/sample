@@ -33,38 +33,25 @@
     var config = {
         messagingSenderId: "27904652077"
     };
-    firebase.initializeApp(config);
-    console.log(firebase);
-    var messaging = firebase.messaging();
+    var messaging;
+    try {
+        firebase.initializeApp(config);
+        console.log(firebase);
+        messaging = firebase.messaging();
+    } catch (e) {
+        console.log("firebase init error", e);
+    }
 </script>
 <script type="text/javascript">
     var requestPermission = function () {
         messaging.requestPermission()
             .then(function () {
-                messaging.getToken()
-                    .then(function (token) {
-                        console.log('Token refreshed.');
-                        console.log("token " + token);
-                        $("#token").val(token);
-                    })
-                    .catch(function (err) {
-                        console.log(err);
-                    });
+                return messaging.getToken();
             })
-            .catch(function (err) {
-                console.log(err);
-            });
-    }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./serviceworker.js');
-        navigator.serviceWorker.ready
-            .then(function (registration) {
-                console.log("registration", registration);
-                messaging.useServiceWorker(registration);
-                // return registration.pushManager.subscribe({
-                //     userVisibleOnly: true
-                // });
+            .then(function (token) {
+                console.log('Token refreshed.');
+                console.log("token " + token);
+                $("#token").val(token);
             })
             // .then(function (subscription) {
             //     console.log('GCM EndPoint is:' + subscription.endpoint);
@@ -78,8 +65,34 @@
             //     console.log('User PublicKey is:' + publicKey);
             //     $("#public-key").val(publicKey);
             // })
+            .catch(function (err) {
+                console.log(err);
+            });
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./serviceworker.js');
+        navigator.serviceWorker.ready
+            .then(function (registration) {
+                console.log("registration", registration);
+                messaging.useServiceWorker(registration);
+                registration.pushManager.subscribe({
+                    userVisibleOnly: true
+                });
+                messaging.onMessage(function (e) {
+                    console.log("onMessage", e);
+                    registration.showNotification(e.data.title, {
+                        body: e.data.body,
+                        icon: e.data.icon,
+                        click_action: e.data.click_action
+                    });
+                });
+                // return registration.pushManager.subscribe({
+                //     userVisibleOnly: true
+                // });
+            })
             .catch(function (e) {
-                console.log(e);
+                console.log("registration error", e);
             });
     } else {
         console.log('no service worker');
@@ -91,7 +104,7 @@
         $("#btn-send").click(function () {
             //var registration_id = $("#endpoint").val().split('/').pop();
             // var registration_id = $("#endpoint").val();
-            var registration_id = $("#token").val();
+            var registration_id = $("#message").val();
             $.ajax({
                     type: 'POST',
                     url: 'https://fcm.googleapis.com/fcm/send',
@@ -131,25 +144,25 @@
             requestPermission();
         });
 
-        $("#del-sw").click(function () {
-            navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                // 登録されているworkerを全て削除する
-                for (let registration of registrations) {
-                    console.log("reg", registration);
-                    registration.unregister();
-                }
-                caches.keys().then(function (keys) {
-                    var promises = [];
-                    // キャッシュストレージを全て削除する
-                    keys.forEach(function (cacheName) {
-                        if (cacheName) {
-                            console.log("cache", cacheName);
-                            promises.push(caches.delete(cacheName));
-                        }
-                    });
-                });
-            });
-        });
+        // $("#del-sw").click(function () {
+        //     navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        //         // 登録されているworkerを全て削除する
+        //         for (let registration of registrations) {
+        //             console.log("reg", registration);
+        //             registration.unregister();
+        //         }
+        //         caches.keys().then(function (keys) {
+        //             var promises = [];
+        //             // キャッシュストレージを全て削除する
+        //             keys.forEach(function (cacheName) {
+        //                 if (cacheName) {
+        //                     console.log("cache", cacheName);
+        //                     promises.push(caches.delete(cacheName));
+        //                 }
+        //             });
+        //         });
+        //     });
+        // });
 
     });
 </script>
