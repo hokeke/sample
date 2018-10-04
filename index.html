@@ -100,17 +100,18 @@
                     //     'registration_ids': [registration_id]
                     // }),
                     data: JSON.stringify({
-                        "message": {
-                            "registration_ids": [registration_id],
-                            "notification": {
-                                "title": "タイトル",
-                                "body": "本文",
-                                "icon": "http://placehold.it/192x192",
-                                "click_action": "localhost:90"
-                            },
-                            "data": {
-                                "data1": "data1"
-                            }
+                        "registration_ids": [registration_id],
+                        // "notification": {
+                        //     "title": "タイトル",
+                        //     "body": "本文",
+                        //     "icon": "http://placehold.it/192x192",
+                        //     "click_action": "localhost:90"
+                        // },
+                        "data": {
+                            "title": "タイトル",
+                            "body": "本文",
+                            "icon": "http://placehold.it/192x192",
+                            "click_action": "localhost:90"
                         }
                     }),
                     headers: {

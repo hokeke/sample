@@ -24,17 +24,17 @@ self.addEventListener('fetch', e => {
   console.log('Service Worker onfetch: ', e);
 });
 
-self.addEventListener('push', e => {
-  console.log('Service Worker onpush: ', e);
+// self.addEventListener('push', e => {
+//   console.log('Service Worker onpush: ', e);
 
-  e.waitUntil(
-    self.registration.showNotification('Push Notification Title', {
-      body: 'message',
-      icon: 'http://placehold.it/192x192',
-      tag: 'push-notification-tag'
-    })
-  );
-});
+//   e.waitUntil(
+//     self.registration.showNotification('Push Notification Title', {
+//       body: 'message',
+//       icon: 'http://placehold.it/192x192',
+//       tag: 'push-notification-tag'
+//     })
+//   );
+// });
 
 messaging.setBackgroundMessageHandler(function (e) {
   console.log("onMessage", e);
