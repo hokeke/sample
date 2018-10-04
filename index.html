@@ -19,10 +19,13 @@
     <br />
     <input type="text" id="token" />
     <p>
-        <button id="del-sw">ServiceWorker削除</button><br />
-        <button id="push-perm">通知許可</button><br />
+        <button id="del-sw">ServiceWorker削除</button>
+        <br />
+        <button id="push-perm">通知許可</button>
+        <br />
         <input type="text" id="message" />
-        <button id="btn-send">送信</button>
+        <button id="btn-send">送信</button><br/>
+        <button id="send2">送信2</button>
     </p>
 
 </body>
@@ -38,6 +41,20 @@
         firebase.initializeApp(config);
         console.log(firebase);
         messaging = firebase.messaging();
+        messaging.onMessage(function (e) {
+            console.log("onMessage", e);
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration('http://localhost/kumoko-elie/push/')
+                    .then(function (registration) {
+                        console.log(registration);
+                        registration.showNotification(e.data.title, {
+                            body: e.data.body,
+                            icon: e.data.icon,
+                            click_action: e.data.click_action
+                        });
+                    });
+            }
+        });
     } catch (e) {
         console.log("firebase init error", e);
     }
@@ -46,56 +63,40 @@
     var requestPermission = function () {
         messaging.requestPermission()
             .then(function () {
-                return messaging.getToken();
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('./serviceworker.js');
+                    return navigator.serviceWorker.ready;
+                } else {
+                    console.log('no service worker');
+                }
             })
-            .then(function (token) {
-                console.log('Token refreshed.');
-                console.log("token " + token);
-                $("#token").val(token);
-            })
-            // .then(function (subscription) {
-            //     console.log('GCM EndPoint is:' + subscription.endpoint);
-            //     $("#endpoint").val(subscription.endpoint);
-            //     var auth = subscription.getKey('auth') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
-            //         subscription.getKey('auth')))) : '';
-            //     console.log('User Auth is:' + auth);
-            //     $("#auth").val(auth);
-            //     var publicKey = subscription.getKey('p256dh') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
-            //         subscription.getKey('p256dh')))) : '';
-            //     console.log('User PublicKey is:' + publicKey);
-            //     $("#public-key").val(publicKey);
-            // })
-            .catch(function (err) {
-                console.log(err);
-            });
-    }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./serviceworker.js');
-        navigator.serviceWorker.ready
             .then(function (registration) {
                 console.log("registration", registration);
                 messaging.useServiceWorker(registration);
                 registration.pushManager.subscribe({
                     userVisibleOnly: true
                 });
-                messaging.onMessage(function (e) {
-                    console.log("onMessage", e);
-                    registration.showNotification(e.data.title, {
-                        body: e.data.body,
-                        icon: e.data.icon,
-                        click_action: e.data.click_action
-                    });
-                });
-                // return registration.pushManager.subscribe({
-                //     userVisibleOnly: true
-                // });
+                return messaging.getToken();
             })
-            .catch(function (e) {
-                console.log("registration error", e);
+            .then(function (token) {
+                console.log('Token refreshed.');
+                console.log("token " + token);
+                $("#token").val(token);
+                $.ajax({
+                    type: 'POST',
+                    url: './put.php',
+                    data: { 'token': token }
+                })
+                    .then(function (data, dataType) {
+                        console.log(data);
+                    })
+                    .fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log(errorThrown);
+                    });
+            })
+            .catch(function (err) {
+                console.log(err);
             });
-    } else {
-        console.log('no service worker');
     }
 
     $(function () {
@@ -106,32 +107,22 @@
             // var registration_id = $("#endpoint").val();
             var registration_id = $("#message").val();
             $.ajax({
-                    type: 'POST',
-                    url: 'https://fcm.googleapis.com/fcm/send',
-                    //data: "\"registration_ids\": [\"" + registration_id + "\"]",
-                    // data : JSON.stringify({
-                    //     'registration_ids': [registration_id]
-                    // }),
-                    data: JSON.stringify({
-                        "registration_ids": [registration_id],
-                        // "notification": {
-                        //     "title": "タイトル",
-                        //     "body": "本文",
-                        //     "icon": "http://placehold.it/192x192",
-                        //     "click_action": "localhost:90"
-                        // },
-                        "data": {
-                            "title": "タイトル",
-                            "body": "本文",
-                            "icon": "http://placehold.it/192x192",
-                            "click_action": "localhost:90"
-                        }
-                    }),
-                    headers: {
-                        'Authorization': 'key=AAAABn8_My0:APA91bHr7dOAIyOyCWN0C56je3HijBzxesygZqiEG8Pt9Lw3_P3fVhV0txeI2p-fMk_EgObqoibEg5auRszQnG7cXRaxoxOie2wo460r9qPozIL4XsduEcz0qGmArUwWV9lnTmuqqJY6',
-                        'Content-Type': 'application/json'
+                type: 'POST',
+                url: 'https://fcm.googleapis.com/fcm/send',
+                data: JSON.stringify({
+                    "registration_ids": [registration_id],
+                    "data": {
+                        "title": "タイトル",
+                        "body": "本文",
+                        "icon": "http://placehold.it/192x192",
+                        "click_action": "http://localhost/kumoko-elie/"
                     }
-                })
+                }),
+                headers: {
+                    'Authorization': 'key=AAAABn8_My0:APA91bHr7dOAIyOyCWN0C56je3HijBzxesygZqiEG8Pt9Lw3_P3fVhV0txeI2p-fMk_EgObqoibEg5auRszQnG7cXRaxoxOie2wo460r9qPozIL4XsduEcz0qGmArUwWV9lnTmuqqJY6',
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(function (data, dataType) {
                     console.log(data);
                 })
@@ -163,6 +154,40 @@
         //         });
         //     });
         // });
+
+        $("#send2").click(function () {
+            $.ajax({
+                type: 'GET',
+                url: './put.php',
+                dataType: 'json'
+            })
+                .then(function (data, dataType) {
+                    console.log(data);
+                    return $.ajax({
+                        type: 'POST',
+                        url: 'https://fcm.googleapis.com/fcm/send',
+                        data: JSON.stringify({
+                            "registration_ids": data,
+                            "data": {
+                                "title": "タイトル",
+                                "body": "本文",
+                                "icon": "http://placehold.it/192x192",
+                                "click_action": "http://localhost/kumoko-elie/"
+                            }
+                        }),
+                        headers: {
+                            'Authorization': 'key=AAAABn8_My0:APA91bHr7dOAIyOyCWN0C56je3HijBzxesygZqiEG8Pt9Lw3_P3fVhV0txeI2p-fMk_EgObqoibEg5auRszQnG7cXRaxoxOie2wo460r9qPozIL4XsduEcz0qGmArUwWV9lnTmuqqJY6',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                })
+                .then(function (data, dataType) {
+                    console.log(data);
+                })
+                .fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                });
+        });
 
     });
 </script>
