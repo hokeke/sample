@@ -42,7 +42,7 @@
         console.log(firebase);
         messaging = firebase.messaging();
         messaging.onMessage(function (e) {
-            console.log("onMessage", e);
+            console.log("onMessage:" + window.location, e);
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistration(window.location)
                     .then(function (registration) {
