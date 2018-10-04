@@ -37,40 +37,12 @@
         messagingSenderId: "27904652077"
     };
     firebase.initializeApp(config);
+    console.log(firebase);
     var messaging = firebase.messaging();
 </script>
 <script type="text/javascript">
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./serviceworker.js');
 
-        navigator.serviceWorker.ready
-            .then(function (registration) {
-                console.log(registration);
-                return registration.pushManager.subscribe({
-                    userVisibleOnly: true
-                });
-            })
-            .then(function (subscription) {
-                console.log('GCM EndPoint is:' + subscription.endpoint);
-                $("#endpoint").val(subscription.endpoint);
-                var auth = subscription.getKey('auth') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
-                    subscription.getKey('auth')))) : '';
-                console.log('User Auth is:' + auth);
-                $("#auth").val(auth);
-                var publicKey = subscription.getKey('p256dh') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
-                    subscription.getKey('p256dh')))) : '';
-                console.log('User PublicKey is:' + publicKey);
-                $("#public-key").val(publicKey);
-            })
-            .catch(function (e) {
-                console.log(e);
-            });
-    } else {
-        console.log('no service worker');
-    }
-
-    $(function () {
-
+    var requestPermission = function() {
         messaging.requestPermission()
             .then(function () {
                 messaging.getToken()
@@ -86,11 +58,46 @@
             .catch(function (err) {
                 console.log(err);
             });
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./serviceworker.js');
+
+        navigator.serviceWorker.ready
+            .then(function (registration) {
+                console.log(registration);
+                messaging.useServiceWorker(registration);
+                requestPermission();
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true
+                });
+            })
+            // .then(function (subscription) {
+            //     console.log('GCM EndPoint is:' + subscription.endpoint);
+            //     $("#endpoint").val(subscription.endpoint);
+            //     var auth = subscription.getKey('auth') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
+            //         subscription.getKey('auth')))) : '';
+            //     console.log('User Auth is:' + auth);
+            //     $("#auth").val(auth);
+            //     var publicKey = subscription.getKey('p256dh') ? btoa(String.fromCharCode.apply(null, new Uint8Array(
+            //         subscription.getKey('p256dh')))) : '';
+            //     console.log('User PublicKey is:' + publicKey);
+            //     $("#public-key").val(publicKey);
+            // })
+            .catch(function (e) {
+                console.log(e);
+            });
+    } else {
+        console.log('no service worker');
+    }
+
+    $(function () {
 
         //curl --header "Authorization: key=(作成したプロジェクトのAPIキー)" --header Content-Type:"application/json" https://android.googleapis.com/gcm/send -d "{\"registration_ids\":[\"(エンドポイント文字列)\"]}"
         $("#btn-send").click(function () {
             //var registration_id = $("#endpoint").val().split('/').pop();
-            var registration_id = $("#endpoint").val();
+            // var registration_id = $("#endpoint").val();
+            var registration_id = $("#token").val();
             $.ajax({
                 type: 'POST',
                 url: 'https://fcm.googleapis.com/fcm/send',
