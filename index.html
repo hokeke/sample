@@ -44,7 +44,7 @@
         messaging.onMessage(function (e) {
             console.log("onMessage", e);
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistration('http://localhost/kumoko-elie/push/')
+                navigator.serviceWorker.getRegistration(window.location)
                     .then(function (registration) {
                         console.log(registration);
                         registration.showNotification(e.data.title, {
